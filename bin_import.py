@@ -1,6 +1,6 @@
 bl_info = {
     'name': 'Dark Bin Loader',
-    'version': (1, 1),
+    'version': (0, 2, 0),
     'blender': (4, 0, 2),
     'location': 'File > Import-Export',
     'description': 'Import bin files and textures',
@@ -138,7 +138,7 @@ class Funpack:
             return result
     def str(self, length):
         result = self.unpack("<" + str(length) + "s")
-        result = result.decode('ascii')
+        result = result.decode('Latin1')
         result = result.rstrip('\00')
         return result
     def i32(self, num = 1):
@@ -696,6 +696,16 @@ def get_gif_pixels(f):
     for i in result:
         pixels.append(palette[i])
 
+    print(len(pixels))
+    
+    # We now do something insane: split into rows and rebuild mirrored upside-down
+    # (how the fuck did this happen to begin with?)
+    recon = []
+    for row in range(img.height-1, -1, -1):
+        recon.append(pixels[row*img.width:row*img.width+img.width])
+    pixels = [comp for row in recon for comp in row]
+    print(len(pixels))
+
     imgdata = ImgData()
     imgdata.pixels = pixels
     imgdata.width = img.width
@@ -750,6 +760,7 @@ class ImportBin(Operator, ImportHelper):
         options = ImportOptions()
         options.do_search = self.do_search
         options.use_empties = self.use_empties
+        print("bin_import v" + str(bl_info['version']))
         return import_bin(context, self.filepath, self.do_search, self.use_empties)
 
 
